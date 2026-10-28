@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إحصاء المعروض - الإدارات القضائية</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-style: normal !important;
+        }
+
+        body {
+            background-color: #808080;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 85px 15px 230px 15px;
+        }
+
+        #menu-toggle {
+            display: none;
+        }
+
+        header {
+            position: fixed;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 30px);
+            max-width: 950px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .open-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .open-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .header-title {
+            font-size: 17px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dropdown-menu {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 30px);
+            max-width: 950px;
+            z-index: 2000;
+            pointer-events: none;
+        }
+
+        .dropdown-content {
+            position: absolute;
+            right: 0;
+            width: 250px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            padding: 10px 0;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .dropdown-content ul {
+            list-style: none;
+        }
+
+        .dropdown-content li button {
+            width: 100%;
+            background: none;
+            border: none;
+            color: white;
+            text-align: right;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .dropdown-content li button:hover, 
+        .dropdown-content li button.active {
+            background-color: rgba(255, 255, 255, 0.25);
+            font-weight: bold;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+            z-index: 1500;
+        }
+
+        #menu-toggle:checked ~ .dropdown-menu .dropdown-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        #menu-toggle:checked ~ .overlay {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .card {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 950px;
+            height: 90vh;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+        }
+
+        .card-header-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 15px;
+            align-items: center;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 8px;
+        }
+
+        .card-header-info h2 {
+            font-size: 18px;
+            color: #007bff;
+        }
+
+        .add-row-btn {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .add-row-btn:hover {
+            transform: scale(1.05);
+            cursor: pointer;
+        }
+
+        .delete-row-btn {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .card table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .card table, .card th, .card td {
+            border: 1px solid #b0c4de;
+        }
+
+        .card th {
+            background: linear-gradient(180deg, #1e88e5, #0056b3);
+            color: #ffffff;
+            font-weight: bold;
+            padding: 8px 2px;
+            cursor: pointer;
+        }
+
+        .card td {
+            padding: 5px 2px;
+            color: #000;
+            background-color: #ffffff;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* حقول الإدخال النصية لضمان عرض الأرقام الهندية */
+        .card table input {
+            width: 100%;
+            border: none;
+            text-align: center;
+            font-size: 13px;
+            outline: none;
+            background: transparent;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .total-row-card td {
+            background: linear-gradient(180deg, #e6f0ff, #cce0ff) !important;
+            border: 2px solid #007bff !important;
+            font-weight: bold;
+            color: #0056b3;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 30px);
+            max-width: 950px;
+            background: linear-gradient(135deg, #007bff, #004085);
+            color: #ffffff;
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+        }
+
+        footer h4 {
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #ffffff;
+        }
+
+        footer table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 13px;
+            background-color: #ffffff;
+            color: #000000;
+            cursor: pointer;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            transition: transform 0.25s ease;
+        }
+
+        footer table, footer th, footer td {
+            border: 1px solid #333333;
+            font-weight: bold;
+        }
+
+        footer th {
+            background-color: #007bff;
+            color: #ffffff;
+            font-weight: bold;
+            padding: 7px 2px;
+        }
+
+        footer td {
+            padding: 6px 2px;
+            color: #000000;
+            background-color: #ffffff;
+            font-weight: bold;
+        }
+
+        footer table:hover {
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body>
+
+    <input type="checkbox" id="menu-toggle">
+
+    <header>
+        <label for="menu-toggle" class="open-btn" title="اختر النوع">&#9776;</label>
+        <div class="header-title">
+            <span>نظام إحصاء القضايا والمعروض</span>
+        </div>
+    </header>
+
+    <label for="menu-toggle" class="overlay"></label>
+
+    <div class="dropdown-menu">
+        <div class="dropdown-content">
+            <ul>
+                <li>
+                    <button class="nav-type-btn active" onclick="switchType('جزئي', this)">
+                        <span>المدني الجزئي</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="nav-type-btn" onclick="switchType('حكومة', this)">
+                        <span>المدني حكومة</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="nav-type-btn" onclick="switchType('مستعجل', this)">
+                        <span>المستعجل</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="nav-type-btn" onclick="switchType('تنفيذ', this)">
+                        <span>التنفيذ</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header-info">
+            <h2 id="current-type-title">تفاصيل: المدني الجزئي</h2>
+            <button class="add-row-btn" onclick="addNewRow()">+ إضافة صف جديد</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width: 30px;">#</th>
+                    <th rowspan="2">مقدم</th>
+                    <th rowspan="2">مؤجل</th>
+                    <th rowspan="2">شطب</th>
+                    <th rowspan="2">موضوعي</th>
+                    <th colspan="4">شكلي</th>
+                    <th colspan="4">إثبات</th>
+                    <th rowspan="2">وقف جزاء</th>
+                </tr>
+                <tr>
+                    <th>عدم اختصاص</th>
+                    <th>عدم قبول</th>
+                    <th>اعتبار</th>
+                    <th>وقف تعليقي</th>
+                    <th>خبير</th>
+                    <th>تحقيق</th>
+                    <th>استجواب</th>
+                    <th>يمين</th>
+                </tr>
+            </thead>
+            <tbody id="card-table-body">
+            </tbody>
+            <tfoot>
+                <tr class="total-row-card">
+                    <td>المجموع</td>
+                    <td id="tot-moqadam">٠</td>
+                    <td id="tot-moajal">٠</td>
+                    <td id="tot-shatb">٠</td>
+                    <td id="tot-mawdoui">٠</td>
+                    <td id="tot-shakli" colspan="4">٠</td>
+                    <td id="tot-ithbat" colspan="4">٠</td>
+                    <td id="tot-waqf">٠</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <footer>
+        <h4>إجمالي كافة الأنواع (المدني الجزئي + حكومة + المستعجل + التنفيذ)</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th rowspan="2">المقدم</th>
+                    <th rowspan="2">المؤجل</th>
+                    <th rowspan="2">الشطب</th>
+                    <th rowspan="2">المحكوم فيه</th>
+                    <th colspan="2">قطعي</th>
+                    <th rowspan="2">إثبات</th>
+                </tr>
+                <tr>
+                    <th>موضوعي</th>
+                    <th>شكلي</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td id="f-moqadam" rowspan="2">٠</td>
+                    <td id="f-moajal" rowspan="2">٠</td>
+                    <td id="f-shatb" rowspan="2">٠</td>
+                    <td id="f-mahkoum" rowspan="2">٠</td>
+                    <td id="f-mawdoui">٠</td>
+                    <td id="f-shakli">٠</td>
+                    <td id="f-ithbat" rowspan="2">٠</td>
+                </tr>
+                <tr>
+                    <td id="f-qatai-sub" colspan="2">٠</td>
+                </tr>
+            </tbody>
+        </table>
+    </footer>
+
+    <script>
+        function toArabicNumbers(num) {
+            if (num === null || num === undefined || isNaN(num)) return '٠';
+            const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            return num.toString().replace(/\d/g, d => arabicDigits[d]);
+        }
+
+        function toEnglishNumbers(str) {
+            if (!str) return '0';
+            const arabicDigits = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
+            let converted = str.toString().replace(/[٠-٩]/g, d => arabicDigits[d]);
+            return converted.replace(/[^\d]/g, '');
+        }
+
+        const dataStore = {
+            'جزئي': [
+                { moajal: 30, shatb: 10, mawdoui: 25, sh: [2, 3, 1, 1], ith: [10, 2, 1, 1], waqf: 0 },
+                { moajal: 10, shatb: 5,  mawdoui: 8,  sh: [1, 1, 0, 1], ith: [3, 1, 0, 1],  waqf: 0 }
+            ],
+            'حكومة': [
+                { moajal: 2, shatb: 1, mawdoui: 7, sh: [1, 0, 0, 0], ith: [1, 0, 0, 0], waqf: 0 },
+                { moajal: 1, shatb: 0, mawdoui: 2, sh: [0, 0, 0, 0], ith: [0, 0, 0, 0], waqf: 0 }
+            ],
+            'مستعجل': [
+                { moajal: 3, shatb: 0, mawdoui: 1, sh: [1, 1, 1, 0], ith: [0, 0, 0, 0], waqf: 0 },
+                { moajal: 1, shatb: 0, mawdoui: 0, sh: [0, 0, 0, 0], ith: [0, 0, 0, 0], waqf: 0 }
+            ],
+            'تنفيذ': [
+                { moajal: 2, shatb: 1, mawdoui: 10, sh: [1, 0, 0, 0], ith: [0, 0, 0, 0], waqf: 0 },
+                { moajal: 0, shatb: 0, mawdoui: 2,  sh: [0, 0, 0, 0], ith: [0, 0, 0, 0], waqf: 0 }
+            ]
+        };
+
+        let currentType = 'جزئي';
+
+        function switchType(type, btnElement) {
+            currentType = type;
+            document.getElementById('menu-toggle').checked = false;
+            
+            document.getElementById('current-type-title').innerText = 'تفاصيل: المدني ' + (type === 'جزئي' ? 'الجزئي' : type);
+            document.querySelectorAll('.nav-type-btn').forEach(btn => btn.classList.remove('active'));
+            if(btnElement) btnElement.classList.add('active');
+
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('card-table-body');
+            tbody.innerHTML = '';
+
+            dataStore[currentType].forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${index > 1 ? `<button class="delete-row-btn" onclick="removeRow(${index})">✕</button>` : toArabicNumbers(index + 1)}</td>
+                    <td style="background-color: #f9f9f9;"><input type="text" class="c-moqadam" readonly></td>
+                    <td><input type="text" value="${toArabicNumbers(row.moajal)}" onkeydown="preventMinus(event)" oninput="handleInput(this, ${index}, 'moajal')"></td>
+                    <td><input type="text" value="${toArabicNumbers(row.shatb)}" onkeydown="preventMinus(event)" oninput="handleInput(this, ${index}, 'shatb')"></td>
+                    <td><input type="text" value="${toArabicNumbers(row.mawdoui)}" onkeydown="preventMinus(event)" oninput="handleInput(this, ${index}, 'mawdoui')"></td>
+                    <td><input type="text" value="${toArabicNumbers(row.sh[0])}" onkeydown="preventMinus(event)" oninput="handleSubInput(this, ${index}, 'sh', 0)"></td>
+                    <td><input type="text" value="${toArabicNumbers(row.sh[1])}" onkeydown="preventMinus(event)" oninput="handleSubInput(this, ${index}, 'sh', 1)"></td>
+                    <td><input type="text" value="${toArabicNumbers(row.sh[2])}" onkeydown="preventMinus(event)" oninput="handleSubInput(this, ${index}, 'sh', 2)"></td>
+                    <td><input type="text" value="${toArabicNumbers(row.sh[3])}" onkeydown="preventMinus(event)" oninput="handleSubInput(this, ${index}, 'sh', 3)"></td>
+                    <td><input type="text" value="${toArabicNumbers(row.ith[0])}" onkeydown="preventMinus(event)" oninput="handleSubInput(this, ${index}, 'ith', 0)"></td>
+                    <td><input type="text" value="${toArabicNumbers(row.ith[1])}" onkeydown="preventMinus(event)" oninput="handleSubInput(this, ${index}, 'ith', 1)"></td>
+                    <td><input type="text" value="${toArabicNumbers(row.ith[2])}" onkeydown="preventMinus(event)" oninput="handleSubInput(this, ${index}, 'ith', 2)"></td>
+                    <td><input type="text" value="${toArabicNumbers(row.ith[3])}" onkeydown="preventMinus(event)" oninput="handleSubInput(this, ${index}, 'ith', 3)"></td>
+                    <td><input type="text" value="${toArabicNumbers(row.waqf)}" onkeydown="preventMinus(event)" oninput="handleInput(this, ${index}, 'waqf')"></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            recalculateAll();
+        }
+
+        function preventMinus(e) {
+            if (e.key === '-' || e.key === 'e') {
+                e.preventDefault();
+            }
+        }
+
+        function handleInput(inputElem, index, field) {
+            let engVal = toEnglishNumbers(inputElem.value);
+            let val = engVal === '' ? 0 : parseInt(engVal, 10);
+            dataStore[currentType][index][field] = val;
+            inputElem.value = toArabicNumbers(val);
+            recalculateAll();
+        }
+
+        function handleSubInput(inputElem, index, field, subIndex) {
+            let engVal = toEnglishNumbers(inputElem.value);
+            let val = engVal === '' ? 0 : parseInt(engVal, 10);
+            dataStore[currentType][index][field][subIndex] = val;
+            inputElem.value = toArabicNumbers(val);
+            recalculateAll();
+        }
+
+        function addNewRow() {
+            dataStore[currentType].push({
+                moajal: 0, shatb: 0, mawdoui: 0, sh: [0, 0, 0, 0], ith: [0, 0, 0, 0], waqf: 0
+            });
+            renderTable();
+        }
+
+        function removeRow(index) {
+            dataStore[currentType].splice(index, 1);
+            renderTable();
+        }
+
+        function recalculateAll() {
+            let overallMoqadam = 0, overallMoajal = 0, overallShatb = 0, overallMahkoum = 0;
+            let overallMawdoui = 0, overallShakli = 0, overallIthbat = 0, overallQataiSub = 0;
+
+            Object.keys(dataStore).forEach(typeKey => {
+                const rows = dataStore[typeKey];
+                let typeMoqadam = 0, typeMoajal = 0, typeShatb = 0, typeMawdoui = 0;
+                let typeShakli = 0, typeIthbat = 0, typeWaqf = 0;
+
+                rows.forEach((row, rIndex) => {
+                    let sumSh = row.sh.reduce((a, b) => a + b, 0);
+                    let sumIth = row.ith.reduce((a, b) => a + b, 0);
+                    let qatai = row.mawdoui + sumSh;
+                    let mahkoum = qatai + sumIth;
+                    let moqadam = row.moajal + row.shatb + mahkoum;
+
+                    typeMoqadam += moqadam;
+                    typeMoajal += row.moajal;
+                    typeShatb += row.shatb;
+                    typeMawdoui += row.mawdoui;
+                    typeShakli += sumSh;
+                    typeIthbat += sumIth;
+                    typeWaqf += row.waqf;
+
+                    if (typeKey === currentType) {
+                        const trList = document.querySelectorAll('#card-table-body tr');
+                        if (trList[rIndex]) {
+                            trList[rIndex].querySelector('.c-moqadam').value = toArabicNumbers(moqadam);
+                        }
+                    }
+                });
+
+                let typeQatai = typeMawdoui + typeShakli;
+
+                if (typeKey === currentType) {
+                    document.getElementById('tot-moqadam').innerText = toArabicNumbers(typeMoqadam);
+                    document.getElementById('tot-moajal').innerText = toArabicNumbers(typeMoajal);
+                    document.getElementById('tot-shatb').innerText = toArabicNumbers(typeShatb);
+                    document.getElementById('tot-mawdoui').innerText = toArabicNumbers(typeMawdoui);
+                    document.getElementById('tot-shakli').innerText = toArabicNumbers(typeShakli);
+                    document.getElementById('tot-ithbat').innerText = toArabicNumbers(typeIthbat);
+                    document.getElementById('tot-waqf').innerText = toArabicNumbers(typeWaqf);
+                }
+
+                overallMoqadam += typeMoqadam;
+                overallMoajal += typeMoajal;
+                overallShatb += typeShatb;
+                overallMahkoum += (typeQatai + typeIthbat);
+                overallMawdoui += typeMawdoui;
+                overallShakli += typeShakli;
+                overallIthbat += typeIthbat;
+                overallQataiSub += typeQatai;
+            });
+
+            document.getElementById('f-moqadam').innerText = toArabicNumbers(overallMoqadam);
+            document.getElementById('f-moajal').innerText = toArabicNumbers(overallMoajal);
+            document.getElementById('f-shatb').innerText = toArabicNumbers(overallShatb);
+            document.getElementById('f-mahkoum').innerText = toArabicNumbers(overallMahkoum);
+            document.getElementById('f-mawdoui').innerText = toArabicNumbers(overallMawdoui);
+            document.getElementById('f-shakli').innerText = toArabicNumbers(overallShakli);
+            document.getElementById('f-ithbat').innerText = toArabicNumbers(overallIthbat);
+            document.getElementById('f-qatai-sub').innerText = toArabicNumbers(overallQataiSub);
+        }
+
+        window.onload = renderTable;
+    </script>
+</body>
+</html>
